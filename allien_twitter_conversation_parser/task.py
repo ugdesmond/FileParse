@@ -1,5 +1,6 @@
 from collections import Counter
 import re
+import datetime
 
 
 class Parser:
@@ -160,8 +161,7 @@ class Parser:
             users_total_number_of_seen_tweet_list = []
             users_total_tweet=[]
             self.get_user_followers(follow_txt_list)
-            users_with_number_of_followers=self.user_followers
-            print(users_with_number_of_followers)
+            users_with_number_of_followers=self.user_followers[0]
             # for each tweet..get the users mentioned ,add all the users mentioned to a set list...
             #use the user that made the tweet to get all his followers in follow.txt
             #the total  users mentioned and total followers show the total people that can see his tweet per tweet made.
@@ -172,11 +172,11 @@ class Parser:
                 #add user to user total tweet to calculate user total tweet....
                 if user_tweet:
                    users_total_tweet.append(user_tweet[0])
-
-                   for user in users_with_number_of_followers:
-                       if user[0] == user_tweet[0]:
-                           user_count = user[1]
-                           break
+                   user = []
+                   user.append(user_tweet[0])
+                   indeces = [s for s, value in enumerate(self.user_followers[1]) if value == user[0]]
+                   if len(indeces) >0:
+                       user_count =users_with_number_of_followers[indeces[0]][1]
 
                 for i in range(0, len(user_tweet)):
                     if self.addresse in user_tweet[i]:
@@ -186,7 +186,6 @@ class Parser:
 
                 for i in  range(len(check_if_user_exist_list)+user_count):
                     users_total_number_of_seen_tweet_list.append(user_tweet[0])
-
 
             top_user_with_highest_seen_tweet = [item for item in Counter(users_total_number_of_seen_tweet_list).most_common()]
             users_total_tweet =[item for item in Counter(users_total_tweet).most_common()]
@@ -211,8 +210,12 @@ class Parser:
                 for i in range(0, len(follow_user)):
                     if i != 0:
                         followed_list.append(follow_user[i])
+
             most_common = [item for item in Counter(followed_list).most_common()]
-            self.user_followers+=most_common
+            most_common_without_count = [item[0] for item in Counter(followed_list).most_common()]
+
+
+            self.user_followers+=[most_common,most_common_without_count]
             return  most_common
         except:
             raise
