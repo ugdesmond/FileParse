@@ -8,6 +8,7 @@ class Parser:
         self.addresse = '@'
         self.stream_txt='stream.txt'
         self.follows_txt='follows.txt'
+        self.user_followers=[]
         pass
 
 
@@ -148,34 +149,34 @@ class Parser:
 
 
 
+
+
     #================================Task 4==============================
     def the_biggest_influencers(self,follow_txt_list,stream_txt_list):
         try:
             remove_non_alpanumeric_characters = re.compile('[^A-Za-z0-9]+')
-
             # total count of users to display
             n_count = int(input("Enter top n influencers to display:"))
             users_total_number_of_seen_tweet_list = []
             users_total_tweet=[]
-# for each tweet..get the users mentioned ,add all the users mentioned to a set list...
-#use the user that made the tweet to get all his followers in follow.txt
-#the total  users mentioned and total followers show the total people that can see his tweet per tweet made.
+            self.get_user_followers(follow_txt_list)
+            users_with_number_of_followers=self.user_followers
+            print(users_with_number_of_followers)
+            # for each tweet..get the users mentioned ,add all the users mentioned to a set list...
+            #use the user that made the tweet to get all his followers in follow.txt
+            #the total  users mentioned and total followers show the total people that can see his tweet per tweet made.
             for tweet in stream_txt_list:
                 check_if_user_exist_list = set()
                 user_tweet = tweet.split()
-                # add user to user total tweet to calculate user total tweet....
+                user_count = 0
+                #add user to user total tweet to calculate user total tweet....
                 if user_tweet:
-
                    users_total_tweet.append(user_tweet[0])
 
-                   #neeed serious optimization# use the user that made the tweet to get all his followers in follow.txt
-                   for user in follow_txt_list:
-                       follow_user = user.split()
-                       for x in range(0, len(follow_user)):
-                           if x != 0:
-                               if user_tweet[0] == follow_user[x]:
-                                   check_if_user_exist_list.add(follow_user[0])
-                                   break
+                   for user in users_with_number_of_followers:
+                       if user[0] == user_tweet[0]:
+                           user_count = user[1]
+                           break
 
                 for i in range(0, len(user_tweet)):
                     if self.addresse in user_tweet[i]:
@@ -183,21 +184,36 @@ class Parser:
                         check_if_user_exist_list.add(filtered_user)
 
 
-                for user_count in  check_if_user_exist_list:
+                for i in  range(len(check_if_user_exist_list)+user_count):
                     users_total_number_of_seen_tweet_list.append(user_tweet[0])
 
 
             top_user_with_highest_seen_tweet = [item for item in Counter(users_total_number_of_seen_tweet_list).most_common()]
             users_total_tweet =[item for item in Counter(users_total_tweet).most_common()]
             user_tweet_with_average_seen=self.get_average_tweet_seen(top_user_with_highest_seen_tweet,users_total_tweet)
-
             user_tweet_set = set()
             for user in user_tweet_with_average_seen:
                 user_tweet_set.add(user[1])
                 if len(user_tweet_set) == n_count:
                     break
-
             self.evaluate_average_tweet_seen(user_tweet_set, user_tweet_with_average_seen)
+        except:
+            raise
+
+
+
+#return user with total number of followers..used to calculate the number of seen
+    def get_user_followers(self, users):
+        try:
+            followed_list = []
+            for user in users:
+                follow_user = user.split()
+                for i in range(0, len(follow_user)):
+                    if i != 0:
+                        followed_list.append(follow_user[i])
+            most_common = [item for item in Counter(followed_list).most_common()]
+            self.user_followers+=most_common
+            return  most_common
         except:
             raise
 
@@ -212,12 +228,13 @@ class Parser:
                         #average =totalseen/total tweets
                         total_seen=top_user_with_highest_seen_obj[1]
                         total_tweet=users[1]
-                        average_seen=float(total_seen/total_tweet)
+                        average_seen=round(float(total_seen/total_tweet),1)
                         user_average_array=(users[0],average_seen)
                         user_tweet_with_average_seen.append(user_average_array)
             return user_tweet_with_average_seen
         except:
             raise
+
 
 
 
@@ -242,8 +259,8 @@ class Parser:
                 top_tweet_sorted_column = (first_index, user_retweet_val)
                 sorted_tweet_if_tie_list.append(top_tweet_sorted_column)
                 top_n_user_tweet_list += sorted_tweet_if_tie_list
-
-            for user_retweet in top_n_user_tweet_list:
+                top_n_user_tweet_list_sorted = sorted(top_n_user_tweet_list, key=lambda tup: tup[1],reverse=True)
+            for user_retweet in top_n_user_tweet_list_sorted:
                 print(user_retweet[1], user_retweet[0])
         except:
             raise
@@ -251,7 +268,7 @@ class Parser:
 
 if __name__ == '__main__':
     parser=Parser()
-    # #parser.get_most_popular_user(parser.read_file("follows.txt"))
+    # parser.get_most_popular_user(parser.read_file("follows.txt"))
     # parser.get_top_n_parrots(parser.read_file(parser.stream_txt))
-    # # #parser.get_worst_troll(parser.read_file("parser.stream_txt"))
+    #parser.get_worst_troll(parser.read_file(parser.stream_txt))
     parser.the_biggest_influencers(parser.read_file('testing.txt'),parser.read_file('test.txt'))
